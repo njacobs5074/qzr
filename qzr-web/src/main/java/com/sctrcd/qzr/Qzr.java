@@ -1,7 +1,10 @@
 package com.sctrcd.qzr;
 
-import java.util.Arrays;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.sctrcd.qzr.web.json.JsonJodaDateTimeSerializer;
+import com.sctrcd.qzr.web.json.JsonJodaLocalDateSerializer;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.kie.api.KieServices;
@@ -16,17 +19,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.sctrcd.qzr.web.json.JsonJodaDateTimeSerializer;
-import com.sctrcd.qzr.web.json.JsonJodaLocalDateSerializer;
+import java.util.Arrays;
 
 /**
  * By running this main class as a Java application, Spring Boot will find and
  * wire up all configurations and beans in the application. It will also run up
  * an embedded Tomcat web server for the REST API controllers and web pages.
- * 
+ *
  * @author Stephen Masters
  */
 @Configuration
@@ -44,9 +43,10 @@ public class Qzr {
         StringBuilder sb = new StringBuilder("\n\n    Active profiles:\n");
         if (activeProfiles.length == 0) {
             sb.append("        No active profiles.\n");
-        } else {
+        }
+        else {
             for (String profile : activeProfiles) {
-                sb.append("        " + profile + "\n");
+                sb.append("        ").append(profile).append("\n");
             }
         }
 
@@ -55,22 +55,22 @@ public class Qzr {
 
         sb.append("\n    Application beans:\n");
         for (String beanName : beanNames) {
-            sb.append("        " + beanName + "\n");
+            sb.append("        ").append(beanName).append("\n");
         }
         log.info(sb.toString());
     }
-    
+
     /**
      * By defining the {@link KieContainer} as a bean here, we ensure that
      * Drools will hunt out the kmodule.xml and rules on application startup.
-     * 
+     *
      * @return The {@link KieContainer}.
      */
     @Bean
     public KieContainer kieContainer() {
         return KieServices.Factory.get().getKieClasspathContainer();
     }
-    
+
     /**
      * The {@link ObjectMapper} gets injected by Spring when doing any Jackson
      * JSON serialization. By adding custom serializers to handle certain Joda
@@ -81,7 +81,7 @@ public class Qzr {
     public ObjectMapper objectMapper(SimpleModule jacksonJodaModule) {
         jacksonJodaModule.addSerializer(DateTime.class, new JsonJodaDateTimeSerializer());
         jacksonJodaModule.addSerializer(LocalDate.class, new JsonJodaLocalDateSerializer());
-        
+
         ObjectMapper om = new ObjectMapper();
         om.registerModule(jacksonJodaModule);
         return om;
