@@ -6,8 +6,10 @@ var qzrServices = angular.module('qzr.services', ['ngResource']);
 
 qzrServices.factory('qzrSvc', ['$http', function ($http) {
 
+    // Server base URL
     var RESOURCES = '/api/quizzes/health/';
 
+    // Utility function to retrieve the HREF for a HATEOAS-style response.
     function getKeyResourceHref(resource) {
         for (var i = 0; i < resource.links.length; i++) {
             if (resource.links[i].rel !== 'self')
@@ -16,6 +18,7 @@ qzrServices.factory('qzrSvc', ['$http', function ($http) {
         return null;
     }
 
+    // Create our service.
     var svc = {
 
         initialised: false,
@@ -65,39 +68,32 @@ qzrServices.factory('qzrSvc', ['$http', function ($http) {
         loadResources: function () {
 
             // Load our REST interface links from the server.
-            $http.get(RESOURCES)
-                .success(function (data) {
-                    for (var i = 0; i < data.links.length; i++) {
-
-                        if (data.links[i].rel === "self")
-                            continue;
-
+            $http.get(RESOURCES).success(function (data) {
+                for (var i = 0; i < data.links.length; i++) {
+                    if (data.links[i].rel !== "self") {
                         svc.restInterfaces[data.links[i].rel] = data.links[i].href;
                     }
+                }
 
-                    console.log('Loading from ' + svc.restInterfaces['questions'] + '...');
-                    $http.get(svc.restInterfaces['questions'])
-                        .success(function (questions) {
-                            svc.model.questions = questions;
-                            $http.get(svc.restInterfaces['hrmax'])
-                                .success(function (hrmax) {
-                                    svc.model.hrmax = hrmax;
-                                    $http.get(svc.restInterfaces['knowns'])
-                                        .success(function (knowns) {
-                                            svc.model.knowns = knowns;
-                                        });
-                                })
-                                .error(function () {
-                                    svc.model.hrmax = null;
-                                });
-                        })
-                        .error(function () {
-                            throw Error('Failed to retrieve ' + svc.restInterfaces['questions']);
-                        })
+                // Then load the associated REST interfaces
+                console.log('Loading from ' + svc.restInterfaces['questions'] + '...');
+                $http.get(svc.restInterfaces['questions']).success(function (questions) {
+                    svc.model.questions = questions;
+
+                    $http.get(svc.restInterfaces['hrmax']).success(function (hrmax) {
+                        svc.model.hrmax = hrmax;
+                        $http.get(svc.restInterfaces['knowns']).success(function (knowns) {
+                            svc.model.knowns = knowns;
+                        });
+                    }).error(function () {
+                        svc.model.hrmax = null;
+                    });
+                }).error(function () {
+                    throw Error('Failed to retrieve ' + svc.restInterfaces['questions']);
                 })
-                .error(function () {
-                    throw Error('Failed to retrieve ' + RESOURCES);
-                });
+            }).error(function () {
+                throw Error('Failed to retrieve ' + RESOURCES);
+            });
         },
 
 
@@ -112,7 +108,6 @@ qzrServices.factory('qzrSvc', ['$http', function ($http) {
             console.log("Answering : " + question.key + "=" + answerValue);
 
             var answer = {key: question.key, value: answerValue};
-
             $http.put(getKeyResourceHref(question), answer).success(svc.loadResources);
         },
 
