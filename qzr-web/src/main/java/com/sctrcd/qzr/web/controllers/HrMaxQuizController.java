@@ -134,8 +134,7 @@ public class HrMaxQuizController {
      * @throws NotFoundException If there are no more questions.
      */
     @RequestMapping(value = "/questions/next", method = RequestMethod.GET, produces = "application/json")
-    public HttpEntity<QuestionResource> getNextQuestion()
-            throws NotFoundException {
+    public HttpEntity<QuestionResource> getNextQuestion() throws NotFoundException {
 
         log.debug("Request received for next question.");
 
@@ -160,8 +159,7 @@ public class HrMaxQuizController {
      * @throws NotFoundException
      */
     @RequestMapping(value = "/questions/{key}", method = RequestMethod.GET, produces = "application/json")
-    public HttpEntity<QuestionResource> getQuestion(@PathVariable(value = "key") String key)
-            throws NotFoundException {
+    public HttpEntity<QuestionResource> getQuestion(@PathVariable(value = "key") String key) throws NotFoundException {
 
         Question question = svc.getQuestion(key);
 
@@ -186,10 +184,8 @@ public class HrMaxQuizController {
      *                             date, but the format is incorrect. Or an invalid {@link Option}.
      */
     @RequestMapping(value = "/questions/{key}/answer", method = RequestMethod.PUT)
-    public HttpEntity<AnswerResource> answer(
-            @PathVariable(value = "key") String key,
-            @RequestBody(required = true) AnswerResource answer)
-            throws BadRequestException {
+    public HttpEntity<AnswerResource> answer(@PathVariable(value = "key") String key,
+                                             @RequestBody(required = true) AnswerResource answer) throws BadRequestException {
 
         log.debug("Answer to question [" + key + "]: " + answer.getValue());
 
@@ -212,14 +208,11 @@ public class HrMaxQuizController {
      * @param key The unique key of the question.
      */
     @RequestMapping(value = "/questions/{key}/skip", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void skip(@PathVariable(value = "key") String key) {
+    public HttpEntity<AnswerResource> skip(@PathVariable(value = "key") String key) {
 
         log.debug("Skipping question [" + key + "].");
 
-        Answer fact = new Answer(key, null);
-
-        svc.answer(fact);
+        return new ResponseEntity<>(answerAssembler.toResource(svc.answer(new Answer(key, null))), HttpStatus.OK);
     }
 
     /**
