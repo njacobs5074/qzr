@@ -10,10 +10,12 @@ qzrServices.factory('qzrSvc', ['$http', function ($http) {
     var RESOURCES = '/api/quizzes/health/';
 
     // Utility function to retrieve the HREF for a HATEOAS-style response.
-    function getKeyResourceHref(resource) {
+    function getResourceHref(resource, rel) {
         for (var i = 0; i < resource.links.length; i++) {
-            if (resource.links[i].rel !== 'self')
+            if (resource.links[i].rel === rel) {
+                console.log('#getResourceHref ' + resource.links[i].href);
                 return resource.links[i].href;
+            }
         }
         return null;
     }
@@ -108,19 +110,19 @@ qzrServices.factory('qzrSvc', ['$http', function ($http) {
             console.log("Answering : " + question.key + "=" + answerValue);
 
             var answer = {key: question.key, value: answerValue};
-            $http.put(getKeyResourceHref(question), answer).success(svc.loadResources);
+            $http.put(getResourceHref(question, 'answer'), answer).success(svc.loadResources);
         },
 
         skip: function (question) {
             console.log("Skipping : " + question.key);
 
-            $http.post(getKeyResourceHref(question)).success(svc.loadResources);
+            $http.post(getResourceHref(question, 'skip')).success(svc.loadResources);
         },
 
         retractAnswer: function (question) {
             console.log("Retracting : " + question.key);
 
-            $http.delete(getKeyResourceHref(question)).success(svc.loadResources);
+            $http.delete(getResourceHref(question, 'answer')).success(svc.loadResources);
         }
     };
 
